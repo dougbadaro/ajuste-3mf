@@ -51,8 +51,8 @@ import {
 // A cena 3D é pesada (Three.js): carrega à parte, depois do resto da página.
 const PrintScene = lazy(() => import("@/components/print-scene"))
 
-// Monograma A em traço fino, com o ponto de ajuste integrado à barra.
-const LOGO = import.meta.env.BASE_URL + "brand.svg"
+// Três camadas em traço fino, remetendo ao fatiamento de uma peça 3D.
+const LOGO = import.meta.env.BASE_URL + "brand.svg?v=layers"
 
 const OPT = {
   printer: ["Bambu Lab A1", "Bambu Lab A1 mini", "Bambu Lab P1S", "Bambu Lab P1P", "Bambu Lab X1 Carbon", "Bambu Lab X1E", "Bambu Lab H2D"],

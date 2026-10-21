@@ -43,7 +43,7 @@ Todo push na `main` dispara o `.github/workflows/deploy.yml`, que roda os testes
 
 ## Imagens
 
-A identidade própria usa `public/brand.svg` (monograma A em traço fino) e `public/logo-ajuste-3mf.svg` (assinatura com nome), ambos em `#A75EFF`. Não reutilize logos da origem. A prévia social é `public/og.jpg`; atualize-a quando o topo mudar. A cena usa os contornos do 3DBenchy em `public/models/benchy-layers.json`, sem a inscrição na base. Preserve os links discretos de atribuição no rodapé.
+A identidade própria usa `public/brand.svg` (ícone de três camadas de fatiamento em traço fino) e `public/logo-ajuste-3mf.svg` (assinatura com nome), ambos em `#A75EFF`. Não reutilize logos da origem. A prévia social é `public/og.jpg`; atualize-a quando o topo mudar. A cena usa os contornos do 3DBenchy em `public/models/benchy-layers.json`, sem a inscrição na base. Preserve os links discretos de atribuição no rodapé.
 
 ## Roteiro de teste
 
