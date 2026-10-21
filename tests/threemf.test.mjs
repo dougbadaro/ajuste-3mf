@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { openProject, buildSummary, extractJson, evaluateChanges, buildModified, makeExample } from "../src/lib/threemf.js"
+import { openProject, buildSummary, extractJson, evaluateChanges, buildModified, makeExample, fmtVal } from "../src/lib/threemf.js"
 
 const form = { printer: "Bambu Lab A1", nozzle: "0.4", ams: "AMS lite (4 cores)", filType: "PLA", brand: "Multifila", use: "Decorativa", prio: "Equilibrada", notes: "" }
 const RESP = '```json\n{"alteracoes":[' +
@@ -89,19 +89,21 @@ test("altera a parede única do topo e marca para o Bambu Studio", async () => {
 })
 
 
-test("pede acabamento com passar ferro sem sugerir chaves que o projeto não contém", async () => {
+test("oferece passar ferro no JSON mesmo quando as chaves são herdadas", async () => {
   const p = await openProject(await makeExample())
   const missing = buildSummary(p, { ...form, prio: "Qualidade visual" }, "face-lisa.3mf")
   assert.match(missing, /engomar \/ passar ferro/)
   assert.match(missing, /faces superiores planas/)
-  assert.match(missing, /Não a adicione ao JSON/)
+  assert.match(missing, /Você PODE e deve incluí-las no JSON/)
+  assert.match(missing, /ironing_flow: faixa: 0 a 100%/)
+  assert.doesNotMatch(missing, /Não a adicione ao JSON/)
   assert.match(missing, /sem colchetes nem unidade/)
   assert.equal("ironing_type" in p.cfg, false)
 
   p.cfg.ironing_type = "no ironing"
   const present = buildSummary(p, form, "face-lisa.3mf")
   assert.match(present, /ironing_type = no ironing/)
-  assert.match(present, /Valores aceitos pelo aplicativo: no ironing, top, topmost ou solid/)
+  assert.match(present, /ironing_type: valores: no ironing, top, topmost, solid/)
   assert.doesNotMatch(present, /Não a adicione ao JSON/)
 })
 
@@ -117,4 +119,57 @@ test("grava passar ferro, rejeita opção inválida e preserva a diferença do p
   const out = await openProject(new Uint8Array(await (await buildModified(p, [changes[0]])).arrayBuffer()))
   assert.equal(out.cfg.ironing_type, "top")
   assert.ok(out.cfg.different_settings_to_system[0].split(";").includes("ironing_type"))
+})
+
+
+test("cria todas as opções de engomar ausentes e reabre o 3MF com elas", async () => {
+  const p = await openProject(await makeExample())
+  const requested = [
+    { chave: "ironing_type", valor: "top" },
+    { chave: "ironing_speed", valor: "30" },
+    { chave: "ironing_flow", valor: "15%" },
+    { chave: "ironing_spacing", valor: "0.15" },
+    { chave: "ironing_inset", valor: "0.21" },
+  ]
+  const original = JSON.stringify(p.cfg)
+  const changes = evaluateChanges(p, { alteracoes: requested })
+  assert.ok(changes.every(c => c.status === "change"))
+  assert.ok(changes.every(c => c.before === undefined))
+  assert.match(fmtVal(changes[0].spec, changes[0].before), /Herdado do perfil/)
+  assert.equal(JSON.stringify(p.cfg), original)
+  for (const noDiffList of [false, true]) {
+    if (noDiffList) delete p.cfg.different_settings_to_system
+    const out = await openProject(new Uint8Array(await (await buildModified(p, changes)).arrayBuffer()))
+    for (const item of requested) {
+      assert.equal(out.cfg[item.chave], item.valor)
+      assert.ok(out.cfg.different_settings_to_system[0].split(";").includes(item.chave))
+    }
+    for (const slot of out.cfg.different_settings_to_system.slice(1)) assert.doesNotMatch(slot, /ironing_/)
+    assert.ok(evaluateChanges(out, { alteracoes: requested }).every(c => c.status === "same"))
+  }
+})
+
+test("criar engomar não libera valores inválidos nem outras chaves ausentes", async () => {
+  const p = await openProject(await makeExample())
+  const changes = evaluateChanges(p, { alteracoes: [
+    { chave: "ironing_type", valor: "ligado" },
+    { chave: "ironing_speed", valor: "0" },
+    { chave: "ironing_flow", valor: "101%" },
+    { chave: "ironing_spacing", valor: "0" },
+    { chave: "ironing_inset", valor: "-1" },
+    { chave: "ironing_fake", valor: "1" },
+    { chave: "wall_generator", valor: "arachne" },
+  ] })
+  assert.ok(changes.every(c => c.status === "bad"))
+  assert.equal("ironing_type" in p.cfg, false)
+})
+
+test("preserva fluxo de engomar como percentual mesmo se a origem usa número", async () => {
+  const p = await openProject(await makeExample())
+  p.cfg.ironing_flow = 10
+  const [change] = evaluateChanges(p, { alteracoes: [{ chave: "ironing_flow", valor: "15%" }] })
+  assert.equal(change.status, "change")
+  assert.equal(change.after, "15%")
+  const out = await openProject(new Uint8Array(await (await buildModified(p, [change])).arrayBuffer()))
+  assert.equal(out.cfg.ironing_flow, "15%")
 })

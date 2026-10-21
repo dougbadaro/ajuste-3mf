@@ -66,4 +66,6 @@ Ajuste 3MF usa uma logo vetorial própria, com três camadas de fatiamento em tr
 
 ## Logo slim e acabamento
 
-A marca usa um ícone de três camadas em traço fino, sem moldura, remetendo a um fatiador 3D. O resumo para a IA solicita avaliar engomar/passar ferro nas faces superiores planas, respeitando filamento, geometria e tempo adicional. A alteração usa `ironing_type` quando ela existe no projeto; quando não existe, o prompt explica a limitação, sem gerar uma alteração que seria ignorada. O app continua exigindo confirmação das mudanças antes de baixar o 3MF.
+A marca usa um ícone de três camadas em traço fino, sem moldura, remetendo a um fatiador 3D. O resumo para a IA solicita avaliar engomar/passar ferro nas faces superiores planas, respeitando filamento, geometria e tempo adicional. O JSON pode criar `ironing_type`, `ironing_speed`, `ironing_flow`, `ironing_spacing` e `ironing_inset` mesmo quando herdados do perfil e ausentes do arquivo. O aplicativo valida os valores e grava as novas chaves no perfil de processo, incluindo `different_settings_to_system`. O app continua exigindo confirmação das mudanças antes de baixar o 3MF.
+
+As opções de passar ferro seguem os nomes de configuração do [Bambu Studio](https://github.com/bambulab/BambuStudio/blob/master/src/libslic3r/PrintConfig.cpp). Quando uma opção está ausente, a comparação mostra “Herdado do perfil”, sem inventar um valor anterior. As demais chaves ausentes continuam sendo rejeitadas.

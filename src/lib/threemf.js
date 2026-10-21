@@ -127,6 +127,14 @@ def('wall_generator', 'Gerador de paredes', 'Qualidade', 'enum', { list: ['class
 def('seam_position', 'Posição da costura', 'Qualidade', 'enum', { list: ['nearest', 'aligned', 'back', 'random'] });
 def('top_surface_pattern', 'Padrão da superfície superior', 'Qualidade', 'enum', { list: ['monotonic', 'monotonicline', 'alignedrectilinear', 'concentric', 'hilbertcurve', 'archimedeanchords', 'octagramspiral'] });
 def('ironing_type', 'Passar ferro (ironing)', 'Qualidade', 'enum', { list: ['no ironing', 'top', 'topmost', 'solid'] });
+def('ironing_speed', 'Velocidade de passar ferro', 'Qualidade', 'num', { min: 1, max: 500, unit: ' mm/s' });
+def('ironing_flow', 'Fluxo de passar ferro', 'Qualidade', 'pct', { min: 0, max: 100, unit: '%' });
+def('ironing_spacing', 'Espaçamento de passar ferro', 'Qualidade', 'num', { min: 0.01, max: 1, unit: ' mm' });
+def('ironing_inset', 'Recuo de passar ferro', 'Qualidade', 'num', { min: 0, max: 100, unit: ' mm' });
+// Estas opções de processo podem ser materializadas no projeto quando herdadas
+// do perfil e, portanto, ausentes do Metadata/project_settings.config original.
+const ADDABLE_IRONING_KEYS = new Set(['ironing_type', 'ironing_speed', 'ironing_flow', 'ironing_spacing', 'ironing_inset']);
+
 def('elefant_foot_compensation', 'Compensação de pé de elefante', 'Qualidade', 'num', { min: 0, max: 2, unit: ' mm' });
 def('detect_thin_wall', 'Detectar paredes finas', 'Qualidade', 'bool');
 def('wall_loops', 'Quantidade de paredes', 'Resistência', 'int', { min: 1, max: 12 });
@@ -196,6 +204,7 @@ function coerce(spec, raw, before) {
   return coerceOne(spec, raw);
 }
 function fmtVal(spec, v) {
+  if (v === undefined) return 'Herdado do perfil (não definido no arquivo)';
   const unit = spec && spec.unit ? spec.unit : '';
   const one = x => String(x) + (/%$/.test(String(x)) ? '' : unit);
   if (Array.isArray(v)) {
@@ -300,16 +309,19 @@ function buildSummary(p, f, fileName) {
   }
   L.push('');
   L.push('Acabamento das faces lisas: avalie incluir ou melhorar o engomar / passar ferro (ironing) nas faces superiores planas para reduzir as linhas visíveis e deixar a superfície mais lisa. Considere a geometria, o filamento, a prioridade e o tempo adicional; recomende quando houver benefício e justifique a escolha, sem ativar indiscriminadamente.');
-  if ('ironing_type' in p.cfg) {
-    L.push('Para passar ferro, avalie a chave ironing_type da lista acima. Valores aceitos pelo aplicativo: no ironing, top, topmost ou solid. Se já estiver ativado, confira se a opção é adequada. Só inclua outras configurações de engomar se elas também estiverem listadas acima; não invente chaves ou valores.');
-  } else {
-    L.push('Este projeto não inclui a chave ironing_type entre as configurações editáveis. Não a adicione ao JSON e não prometa ativar passar ferro neste arquivo. Se o recurso for indicado, explique no campo resumo que ele precisa ser configurado no Bambu Studio e o projeto deve ser salvo novamente antes de reenviar.');
+  L.push('Passar ferro é suportado pelo aplicativo mesmo quando estas chaves não existem no arquivo original. Você PODE e deve incluí-las no JSON quando indicadas; o aplicativo cria as configurações no 3MF ajustado.');
+  L.push('Configurações de engomar aceitas (incluindo opções adicionais às configurações atuais):');
+  for (const key of ADDABLE_IRONING_KEYS) {
+    const spec = S[key];
+    const allowed = spec.type === 'enum' ? 'valores: ' + spec.list.join(', ') : 'faixa: ' + spec.min + ' a ' + spec.max + (spec.unit || '');
+    L.push('- ' + key + ': ' + allowed + (key in p.cfg ? '; valor atual listado acima' : '; herdado do perfil, sem valor explícito no arquivo'));
   }
+  L.push('Avalie ironing_type e, para melhorar o acabamento, ironing_speed, ironing_flow, ironing_spacing e ironing_inset. Não trate valores herdados como desligados nem invente os valores atuais. Use somente chaves aceitas, com valores adequados ao filamento e às faces planas da peça.');
   L.push('');
   L.push('Se precisar, pesquise as recomendações do fabricante do filamento e as especificações da impressora antes de responder.');
   L.push('Responda SOMENTE com um bloco de código JSON neste formato:');
   L.push('{"resumo":"uma frase","alteracoes":[{"chave":"layer_height","valor":"0.16","motivo":"explicação curta"}]}');
-  L.push('Regras: use apenas chaves da lista acima; mantenha o mesmo formato de valor (ex.: "15%" para densidade); para números, envie um valor escalar como "40", sem colchetes nem unidade; numa chave por filamento, um valor único vale para todos os filamentos; liste só o que realmente deve mudar.');
+  L.push('Regras: use apenas as configurações atuais ou as configurações de engomar aceitas listadas acima; mantenha o mesmo formato de valor (ex.: "15%" para densidade); para números, envie um valor escalar como "40", sem colchetes nem unidade; numa chave por filamento, um valor único vale para todos os filamentos; liste só o que realmente deve mudar.');
   return L.join('\n');
 }
 
@@ -333,12 +345,12 @@ function evaluateChanges(p, data) {
     const r = { key, spec, reason: String((it && (it.motivo ?? it.reason)) ?? ''), before: p.cfg[key], after: null, status: 'bad', msg: '', conflicts: [] };
     if (!key) { r.msg = 'Item sem nome de chave.'; return r; }
     if (!spec) { r.msg = 'Chave fora da lista que o app altera com segurança.'; return r; }
-    if (!(key in p.cfg)) { r.msg = 'Esta chave não existe neste projeto.'; return r; }
+    if (!(key in p.cfg) && !ADDABLE_IRONING_KEYS.has(key)) { r.msg = 'Esta chave não existe neste projeto.'; return r; }
     const raw = it.valor ?? it.value;
     if (raw === undefined || raw === null) { r.msg = 'Item sem valor.'; return r; }
     try { r.after = coerce(spec, raw, p.cfg[key]); } catch (e) { r.msg = e.message; return r; }
     const wasNum = x => typeof x === 'number';
-    if (Array.isArray(r.before) ? wasNum(r.before[0]) : wasNum(r.before)) {
+    if (spec.type !== 'pct' && (Array.isArray(r.before) ? wasNum(r.before[0]) : wasNum(r.before))) {
       r.after = Array.isArray(r.after) ? r.after.map(Number) : Number(r.after);
     }
     r.status = sameVal(r.after, r.before) ? 'same' : 'change';
