@@ -1,81 +1,52 @@
-# Ajuste 3MF
+# Ajuste 3MF — réplica privada
 
-Versão 1.0 · Nosso Projeto 3D
+Projeto local em `C:\www\ajuste-3mf`, baseado no código público de [Nosso Projeto 3D](https://github.com/nossoprojeto3d/ajuste-3mf), revisão `8d034d9`. O histórico e os créditos originais foram preservados. O visual, os textos, os recursos e a animação do site de referência foram mantidos.
 
-App web que deixa a IA configurar o projeto do Bambu Studio. Você envia o `.3mf`, copia um resumo para o Claude, cola a resposta dele de volta, confere cada mudança (valor de antes e de depois) e baixa o 3MF ajustado. Sem chave de API e sem cadastro. O arquivo é processado no navegador e não é enviado para nenhum servidor.
+## Executar
 
-## Como funciona
+Requer Node.js 22 ou superior.
 
-1. **Arquivo:** o app lê o `.3mf`, mostra impressora, bico, filamentos e objetos do projeto e preenche o formulário com o que encontrou.
-2. **Resumo:** com impressora, bico, AMS, tipo e marca do filamento, uso da peça, prioridade e observações, o app monta um texto para você colar numa conversa com o Claude.
-3. **Resposta:** o Claude responde com um JSON de ajustes. Você cola no app, desmarca o que não quiser e baixa o `-ajustado.3mf`.
-
-Só entram na lista as configurações conhecidas e dentro de faixas seguras (cerca de 55 chaves). O que estiver fora disso aparece como ignorado. Se um objeto tem ajuste próprio que vence o valor global, o app avisa e oferece remover esse ajuste.
-
-Marcas de filamento disponíveis: Multifila, Volt3D, Bambu Lab, 3D Lab, Polymaker, eSun, Sunlu, Creality, Elegoo, Overture, Hatchbox, Prusament, Anycubic e Outros (o resumo pede ao Claude um perfil genérico e conservador).
-
-## Layout
-
-- **Topo:** apresentação curta e uma cena 3D de um vaso sendo impresso camada por camada.
-- **Ferramenta:** uma etapa em foco por vez (Arquivo, Claude, Aplicar), com a barra de etapas no topo para avançar e voltar. Funciona igual no celular e no computador. Dá para arrastar o `.3mf` para qualquer lugar da página.
-
-## Stack
-
-React 19, Vite 6, Tailwind v4 e componentes do shadcn/ui (new-york v4). Motion para as animações, Three.js para a cena 3D e ícones do Phosphor. Visual "oficina técnica": sempre escuro, grafite com um acento laranja-filamento, Geist no texto e Geist Mono nos dados.
-
-## Rodar
-
-```bash
-npm install
-npm run dev        # http://localhost:5173
+```sh
+npm ci
+npm run dev
 ```
 
-Mantenha o projeto fora de pastas sincronizadas (iCloud, Dropbox). Elas travam o servidor de desenvolvimento.
+Abra o endereço mostrado pelo Vite (normalmente http://localhost:5173).
 
-## Testes
-
-```bash
-npm test           # lógica do 3MF: leitura, validação e gravação
+```sh
+npm test
 npm run typecheck
+npm run build
+npm run preview
 ```
 
-## Medição de uso
+`dist/` contém a versão compilada e não é versionada. O projeto funciona em subpastas porque o Vite usa `base: './'`.
 
-O ID do Google Analytics fica no arquivo `.env`, que vai junto com o código. Ele é público (aparece no site publicado), então não há problema em subir.
+## Tecnologia e funcionamento
 
-```
-VITE_GA_ID=G-PNRZ6JQWLP
-VITE_META_PIXEL_ID=
-```
+React 19, TypeScript, Vite, Tailwind CSS, Motion e Three.js. As fontes e imagens ficam no próprio projeto. O processamento ZIP/3MF ocorre no navegador, sem backend e sem chave de API.
 
-Para trocar o ID ou ligar o Meta Pixel, edite o `.env` e envie. A publicação automática já usa esse arquivo. Deixe os campos vazios para desligar a medição.
+1. Abra um projeto `.3mf` salvo pelo Bambu Studio.
+2. Confira impressora, filamentos, uso e prioridade; copie o resumo para a IA.
+3. Cole o JSON, confira as mudanças e baixe o arquivo ajustado.
 
-Segredos de verdade (senhas, chaves privadas), se um dia existirem, não vão no `.env`: use `.env.local`, que o `.gitignore` bloqueia.
+Valores numéricos no JSON devem ser escalares, por exemplo `"50"`, sem colchetes. Configurações desconhecidas ou fora dos limites aparecem como ignoradas. O exemplo integrado não permite download; use um arquivo real para exportar. Abra o resultado no Bambu Studio e fatie novamente.
 
-Com ID configurado, aparece um aviso de cookies e os scripts só carregam depois do "Aceitar". Quem usa "Não rastrear" no navegador não é medido e não vê o aviso.
+## Ajustes desta cópia
 
-Eventos enviados: `arquivo_lido`, `resumo_copiado`, `resposta_conferida`, `3mf_baixado`, `recomecar` e `instagram_clique`. Nunca vão para a medição o arquivo, o nome dele, o resumo ou a resposta do Claude.
+- IDs de Analytics e Meta Pixel vazios em `.env`; nenhum evento é enviado ao proprietário do site original.
+- O workflow apenas testa, verifica tipos e compila. Não publica no GitHub Pages.
+- Código de aplicação e recursos visuais preservados.
+- Mapa Graphify incluído em `graphify-out/`: `graph.html`, `graph.json`, `GRAPH_REPORT.md` e `HEALTH.txt`.
 
-## Publicar (GitHub Pages)
+O Graphify analisou os 33 arquivos de `src`, gerando 235 nós, 564 relações e 15 comunidades sem API paga. O diagnóstico apontou quatro relações com destino ausente, uma autorrelação e sete pares de relações colapsados no grafo não dirigido. São limites do mapa estrutural; consulte `HEALTH.txt`.
 
-A publicação é automática: a cada envio para a branch `main` (ou `master`), o GitHub roda os testes, faz o build e publica. O arquivo está em `.github/workflows/deploy.yml`.
+## Validação
 
-Configuração, uma vez só: no repositório `ajuste-3mf`, vá em **Settings > Pages** e em **Source** escolha **GitHub Actions**. O site fica em `nossoprojeto3d.github.io/ajuste-3mf/`.
+Os seis testes existentes verificam leitura, validação, gravação e reabertura do 3MF, incluindo `different_settings_to_system`. TypeScript e build de produção também foram verificados. O build mantém o aviso de tamanho dos pacotes Three.js/interface acima de 500 kB.
 
-Para publicar na mão, rode `npm run build` e publique o conteúdo de `dist`. O `base: './'` do Vite faz o site funcionar em qualquer subcaminho.
+## Privacidade e origem
 
-## Estrutura
+Esta cópia foi preparada para um repositório privado. Os links da marca continuam apontando para o autor original para preservar a referência solicitada. Não há licença de redistribuição declarada na origem; esta cópia não acrescenta uma licença nem altera os créditos originais.
 
-- `src/App.tsx`: a tela, com os dois layouts.
-- `src/lib/threemf.js`: lógica do 3MF, sem dependências (leitor e gravador de ZIP próprios).
-- `src/lib/analytics.ts`: medição com consentimento.
-- `src/components/consent-banner.tsx`: aviso de cookies.
-- `src/components/ui/`: componentes do shadcn. Só `native-select.tsx` e `sonner.tsx` têm mudanças.
-- `src/index.css`: cores da marca, fontes e o traço de camadas do título.
-- `tests/`: testes da lógica do 3MF.
-- `.github/workflows/deploy.yml`: publicação automática.
-
-## Limitações conhecidas
-
-- A logo e o ícone da aba vêm do site do catálogo. Para não depender dele, coloque uma cópia da logo em `public/` e troque os endereços no `index.html`.
-- A prévia do link no WhatsApp só aparece depois de publicado, e o WhatsApp guarda a prévia antiga (use `?v=2` no link para atualizar).
+Segredos futuros devem ficar em `.env.local`, ignorado pelo Git. O arquivo `.env` versionado contém apenas configurações públicas vazias.

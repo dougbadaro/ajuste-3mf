@@ -12,3 +12,9 @@ dist
 *.log
 .vscode
 .idea
+
+# Graphify: artefatos finais versionados; cache local ignorado
+graphify-out/.*
+graphify-out/cache/
+src/graphify-out/
+
