@@ -63,3 +63,7 @@ Para regenerar os contornos, instale `numpy` em um ambiente Python e execute `py
 ## Identidade própria
 
 Ajuste 3MF usa uma logo vetorial própria, com camadas de impressão e um ponto de ajuste. O rodapé mantém um link discreto para a origem, sem usar o nome ou os logos anteriores como identidade do site. Os contornos do barquinho omitem a inscrição na base do STL original.
+
+## Logo slim e acabamento
+
+A marca usa um monograma A em traço fino, sem moldura, com um ponto de ajuste na barra. O resumo para a IA solicita avaliar engomar/passar ferro nas faces superiores planas, respeitando filamento, geometria e tempo adicional. A alteração usa `ironing_type` quando ela existe no projeto; quando não existe, o prompt explica a limitação, sem gerar uma alteração que seria ignorada. O app continua exigindo confirmação das mudanças antes de baixar o 3MF.

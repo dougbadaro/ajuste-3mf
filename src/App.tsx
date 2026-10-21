@@ -51,7 +51,7 @@ import {
 // A cena 3D é pesada (Three.js): carrega à parte, depois do resto da página.
 const PrintScene = lazy(() => import("@/components/print-scene"))
 
-// Identidade vetorial própria: camadas de impressão e ajuste em roxo.
+// Monograma A em traço fino, com o ponto de ajuste integrado à barra.
 const LOGO = import.meta.env.BASE_URL + "brand.svg"
 
 const OPT = {
@@ -557,7 +557,7 @@ export default function App() {
             <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-2xl border border-hairline-strong bg-background/70 px-3 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:px-4">
               <a href="#hero-title" className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                 <img src={LOGO} alt="" width={32} height={32} className="size-8 object-contain" />
-                <span className="truncate text-[15px] font-semibold tracking-tight">
+                <span className="truncate text-[17px] font-light tracking-tight">
                   Ajuste <span className="text-primary-ink">3MF</span>
                 </span>
               </a>

@@ -70,7 +70,7 @@ export function Footer({ logo }: { logo: string }) {
         <div className="flex items-center gap-2.5">
           <img src={logo} alt="" width={28} height={28} loading="lazy" className="size-7 object-contain" />
           <span>
-            <span className="font-medium text-foreground">Ajuste <span className="text-primary-ink">3MF</span></span>
+            <span className="font-light text-foreground">Ajuste <span className="text-primary-ink">3MF</span></span>
           </span>
         </div>
       </div>

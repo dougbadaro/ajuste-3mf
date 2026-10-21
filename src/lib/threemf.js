@@ -299,10 +299,17 @@ function buildSummary(p, f, fileName) {
     }
   }
   L.push('');
+  L.push('Acabamento das faces lisas: avalie incluir ou melhorar o engomar / passar ferro (ironing) nas faces superiores planas para reduzir as linhas visíveis e deixar a superfície mais lisa. Considere a geometria, o filamento, a prioridade e o tempo adicional; recomende quando houver benefício e justifique a escolha, sem ativar indiscriminadamente.');
+  if ('ironing_type' in p.cfg) {
+    L.push('Para passar ferro, avalie a chave ironing_type da lista acima. Valores aceitos pelo aplicativo: no ironing, top, topmost ou solid. Se já estiver ativado, confira se a opção é adequada. Só inclua outras configurações de engomar se elas também estiverem listadas acima; não invente chaves ou valores.');
+  } else {
+    L.push('Este projeto não inclui a chave ironing_type entre as configurações editáveis. Não a adicione ao JSON e não prometa ativar passar ferro neste arquivo. Se o recurso for indicado, explique no campo resumo que ele precisa ser configurado no Bambu Studio e o projeto deve ser salvo novamente antes de reenviar.');
+  }
+  L.push('');
   L.push('Se precisar, pesquise as recomendações do fabricante do filamento e as especificações da impressora antes de responder.');
   L.push('Responda SOMENTE com um bloco de código JSON neste formato:');
   L.push('{"resumo":"uma frase","alteracoes":[{"chave":"layer_height","valor":"0.16","motivo":"explicação curta"}]}');
-  L.push('Regras: use apenas chaves da lista acima; mantenha o mesmo formato de valor (ex.: "15%" para densidade); numa chave por filamento, um valor único vale para todos os filamentos; liste só o que realmente deve mudar.');
+  L.push('Regras: use apenas chaves da lista acima; mantenha o mesmo formato de valor (ex.: "15%" para densidade); para números, envie um valor escalar como "40", sem colchetes nem unidade; numa chave por filamento, um valor único vale para todos os filamentos; liste só o que realmente deve mudar.');
   return L.join('\n');
 }
 

@@ -87,3 +87,34 @@ test("altera a parede única do topo e marca para o Bambu Studio", async () => {
   assert.equal(out.cfg.top_one_wall_type, "not apply")
   assert.ok(out.cfg.different_settings_to_system[0].split(";").includes("top_one_wall_type"))
 })
+
+
+test("pede acabamento com passar ferro sem sugerir chaves que o projeto não contém", async () => {
+  const p = await openProject(await makeExample())
+  const missing = buildSummary(p, { ...form, prio: "Qualidade visual" }, "face-lisa.3mf")
+  assert.match(missing, /engomar \/ passar ferro/)
+  assert.match(missing, /faces superiores planas/)
+  assert.match(missing, /Não a adicione ao JSON/)
+  assert.match(missing, /sem colchetes nem unidade/)
+  assert.equal("ironing_type" in p.cfg, false)
+
+  p.cfg.ironing_type = "no ironing"
+  const present = buildSummary(p, form, "face-lisa.3mf")
+  assert.match(present, /ironing_type = no ironing/)
+  assert.match(present, /Valores aceitos pelo aplicativo: no ironing, top, topmost ou solid/)
+  assert.doesNotMatch(present, /Não a adicione ao JSON/)
+})
+
+test("grava passar ferro, rejeita opção inválida e preserva a diferença do perfil", async () => {
+  const p = await openProject(await makeExample())
+  p.cfg.ironing_type = "no ironing"
+  const changes = evaluateChanges(p, { alteracoes: [
+    { chave: "ironing_type", valor: "top", motivo: "Acabamento das faces planas" },
+    { chave: "ironing_type", valor: "ligado" },
+  ] })
+  assert.equal(changes[0].status, "change")
+  assert.equal(changes[1].status, "bad")
+  const out = await openProject(new Uint8Array(await (await buildModified(p, [changes[0]])).arrayBuffer()))
+  assert.equal(out.cfg.ironing_type, "top")
+  assert.ok(out.cfg.different_settings_to_system[0].split(";").includes("ironing_type"))
+})
