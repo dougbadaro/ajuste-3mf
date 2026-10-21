@@ -1,6 +1,7 @@
 // Lógica do 3MF: ler o ZIP, extrair as configurações do Bambu Studio, validar as alterações e gravar o arquivo novo.
 // Não depende de nenhuma biblioteca (ZIP próprio sobre CompressionStream/DecompressionStream).
 'use strict';
+import { PROFILE_PATH, xmlAttrs, analyzeGeometry, parseProfiles, serializeProfiles, createAdaptiveProfiles } from './variable-layers.js';
 const CFG_PATH = 'Metadata/project_settings.config';
 const MS_PATH = 'Metadata/model_settings.config';
 const enc = new TextEncoder();
@@ -119,7 +120,7 @@ function writeZip(items) {
 /* ---------- Configurações que o app sabe alterar ---------- */
 const GROUPS = ['Qualidade', 'Resistência', 'Suporte', 'Aderência', 'Velocidade', 'Temperatura', 'Resfriamento', 'Multicor'];
 const PATTERNS = ['grid', 'gyroid', 'honeycomb', 'cubic', 'adaptivecubic', 'supportcubic', 'line', 'rectilinear', 'alignedrectilinear', 'triangles', 'tri-hexagon', 'lightning', '3dhoneycomb', 'concentric', 'hilbertcurve', 'archimedeanchords', 'octagramspiral', 'crosshatch', 'zig-zag'];
-const S = {};
+const S = Object.create(null);
 function def(key, label, group, type, o) { S[key] = Object.assign({ key, label, group, type }, o || {}); }
 def('layer_height', 'Altura de camada', 'Qualidade', 'num', { min: 0.05, max: 0.32, unit: ' mm' });
 def('initial_layer_print_height', 'Altura da primeira camada', 'Qualidade', 'num', { min: 0.08, max: 0.4, unit: ' mm' });
@@ -133,13 +134,17 @@ def('ironing_spacing', 'Espaçamento de passar ferro', 'Qualidade', 'num', { min
 def('ironing_inset', 'Recuo de passar ferro', 'Qualidade', 'num', { min: 0, max: 100, unit: ' mm' });
 // Estas opções de processo podem ser materializadas no projeto quando herdadas
 // do perfil e, portanto, ausentes do Metadata/project_settings.config original.
-const ADDABLE_IRONING_KEYS = new Set(['ironing_type', 'ironing_speed', 'ironing_flow', 'ironing_spacing', 'ironing_inset']);
+const IRONING_KEYS = ['ironing_type', 'ironing_speed', 'ironing_flow', 'ironing_spacing', 'ironing_inset'];
+const ADDABLE_PROCESS_KEYS = new Set([...IRONING_KEYS, 'top_shell_thickness', 'bottom_shell_thickness', 'wall_generator', 'top_surface_pattern', 'seam_position']);
 
 def('elefant_foot_compensation', 'Compensação de pé de elefante', 'Qualidade', 'num', { min: 0, max: 2, unit: ' mm' });
 def('detect_thin_wall', 'Detectar paredes finas', 'Qualidade', 'bool');
 def('wall_loops', 'Quantidade de paredes', 'Resistência', 'int', { min: 1, max: 12 });
 def('top_shell_layers', 'Camadas do topo', 'Resistência', 'int', { min: 0, max: 30 });
 def('bottom_shell_layers', 'Camadas da base', 'Resistência', 'int', { min: 0, max: 30 });
+def('top_shell_thickness', 'Espessura mínima do topo', 'Resistência', 'num', { min: 0, max: 10, unit: ' mm' });
+def('bottom_shell_thickness', 'Espessura mínima da base', 'Resistência', 'num', { min: 0, max: 10, unit: ' mm' });
+def('altura_variavel', 'Altura variável por geometria', 'Qualidade', 'variable_layers');
 def('sparse_infill_density', 'Densidade do preenchimento', 'Resistência', 'pct', { min: 0, max: 100 });
 def('sparse_infill_pattern', 'Padrão do preenchimento', 'Resistência', 'enum', { list: PATTERNS });
 def('only_one_wall_top', 'Uma parede só no topo', 'Resistência', 'bool'); // nome antigo, só em projetos de versões velhas
@@ -204,6 +209,11 @@ function coerce(spec, raw, before) {
   return coerceOne(spec, raw);
 }
 function fmtVal(spec, v) {
+  if (spec?.type === 'variable_layers') {
+    if (v?.modo === 'desativar') return 'Camada fixa · remover perfil de ' + v.objetos.length + ' objeto(s)';
+    if (v?.perfis) return v.objetos.length + ' objeto(s) · ' + v.altura_min + '–' + v.altura_max + ' mm · ' + (v.sincronizar ? 'perfil sincronizado' : 'perfil adaptado à geometria');
+    return v?.count ? v.count + ' perfil(is) variável(is) salvo(s)' : 'Sem perfil variável salvo';
+  }
   if (v === undefined) return 'Herdado do perfil (não definido no arquivo)';
   const unit = spec && spec.unit ? spec.unit : '';
   const one = x => String(x) + (/%$/.test(String(x)) ? '' : unit);
@@ -220,17 +230,18 @@ const xmlText = s => s.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/
 const META_RE = '<metadata\\s+(?:type="[^"]*"\\s+)?key="([^"]*)"\\s+value="([^"]*)"\\s*\\/>';
 function parseObjects(xml) {
   const out = [];
-  const re = /<object\b[^>]*>([\s\S]*?)<\/object>/g;
+  const re = /<object\b([^>]*)>([\s\S]*?)<\/object>/g;
   let m;
   while ((m = re.exec(xml))) {
     const mre = new RegExp(META_RE, 'g');
     let name = '', k;
     const overrides = new Set();
-    while ((k = mre.exec(m[1]))) {
+    while ((k = mre.exec(m[2]))) {
       if (k[1] === 'name' && !name) name = xmlText(k[2]);
       if (S[k[1]]) overrides.add(k[1]);
     }
-    out.push({ name: name || 'Objeto ' + (out.length + 1), overrides: [...overrides] });
+    const excludedParts = [...m[2].matchAll(/<part\b([^>]*)>/g)].map(p => xmlAttrs(p[1])).filter(a => a.subtype && a.subtype !== 'normal_part').map(a => a.id);
+    out.push({ id: xmlAttrs(m[1]).id, name: name || 'Objeto ' + (out.length + 1), overrides: [...overrides], excludedParts });
   }
   return out;
 }
@@ -256,9 +267,20 @@ async function openProject(buf) {
     const a = head.match(/name="Application">([^<]+)</);
     if (a) app = xmlText(a[1]);
   }
+  const objects = parseObjects(modelXml);
+  const geometry = await analyzeGeometry(async path => {
+    const entry = findEntry(zip, path);
+    if (!entry) return null;
+    if (entry.usize > 80e6) throw new Error('Modelo grande demais para análise automática.');
+    return dec.decode(await readEntry(zip, entry));
+  }, objects);
+  const profileEntry = findEntry(zip, PROFILE_PATH);
+  let layerProfiles = {}, profileError = '';
+  try { if (profileEntry) layerProfiles = parseProfiles(dec.decode(await readEntry(zip, profileEntry))); }
+  catch (error) { profileError = error.message; }
   return {
-    zip, cfg, modelXml, app,
-    objects: parseObjects(modelXml),
+    zip, cfg, modelXml, app, geometry, layerProfiles, profileError,
+    objects,
     plates: (modelXml.match(/<plate>/g) || []).length,
     sliced: zip.entries.some(e => /^Metadata\/plate_\d+\.gcode$/.test(e.name))
   };
@@ -297,6 +319,13 @@ function buildSummary(p, f, fileName) {
   const ov = p.objects.filter(o => o.overrides.length);
   if (ov.length) L.push('Objetos com ajuste próprio: ' + ov.map(o => o.name + ' (' + o.overrides.join(', ') + ')').join('; '));
   L.push('');
+  L.push('Geometria para altura variável (índices nativos do 3MF, medidas na orientação atual):');
+  for (const g of p.geometry || []) {
+    if (g.available) L.push('- objeto ' + g.index + ': ' + g.name + ' | ' + [g.width,g.depth,g.height].map(n => Number(n.toFixed(3))).join(' × ') + ' mm | ' + (g.curved ? 'contém faces inclinadas/curvas: perfil automático disponível' : 'faces planas/verticais: não há benefício geométrico identificado para altura variável') + (p.layerProfiles?.[g.index] ? ' | já possui perfil variável salvo' : ''));
+    else L.push('- ' + g.name + ': análise automática indisponível (' + g.error + ')');
+  }
+  L.push('O aplicativo analisa inclinações da malha na orientação atual. Não deduza a forma pelo nome do objeto nem prometa alterar sua orientação: o app não gira as peças.');
+  L.push('');
   L.push('Configurações atuais (chave = valor):');
   for (const g of GROUPS) {
     const keys = Object.keys(S).filter(k => S[k].group === g && k in p.cfg);
@@ -311,17 +340,28 @@ function buildSummary(p, f, fileName) {
   L.push('Acabamento das faces lisas: avalie incluir ou melhorar o engomar / passar ferro (ironing) nas faces superiores planas para reduzir as linhas visíveis e deixar a superfície mais lisa. Considere a geometria, o filamento, a prioridade e o tempo adicional; recomende quando houver benefício e justifique a escolha, sem ativar indiscriminadamente.');
   L.push('Passar ferro é suportado pelo aplicativo mesmo quando estas chaves não existem no arquivo original. Você PODE e deve incluí-las no JSON quando indicadas; o aplicativo cria as configurações no 3MF ajustado.');
   L.push('Configurações de engomar aceitas (incluindo opções adicionais às configurações atuais):');
-  for (const key of ADDABLE_IRONING_KEYS) {
+  for (const key of IRONING_KEYS) {
     const spec = S[key];
     const allowed = spec.type === 'enum' ? 'valores: ' + spec.list.join(', ') : 'faixa: ' + spec.min + ' a ' + spec.max + (spec.unit || '');
     L.push('- ' + key + ': ' + allowed + (key in p.cfg ? '; valor atual listado acima' : '; herdado do perfil, sem valor explícito no arquivo'));
   }
   L.push('Avalie ironing_type e, para melhorar o acabamento, ironing_speed, ironing_flow, ironing_spacing e ironing_inset. Não trate valores herdados como desligados nem invente os valores atuais. Use somente chaves aceitas, com valores adequados ao filamento e às faces planas da peça.');
   L.push('');
+  L.push('Melhorias de acabamento adicionais aceitas mesmo se ausentes do arquivo: top_shell_thickness e bottom_shell_thickness (espessura mínima em mm, 0 a 10), wall_generator (classic/arachne), top_surface_pattern e seam_position, respeitando as opções já suportadas pelo Bambu Studio.');
+  for (const key of ADDABLE_PROCESS_KEYS) {
+    if (IRONING_KEYS.includes(key)) continue;
+    const spec = S[key];
+    L.push('- ' + key + ': ' + (spec.list ? 'valores: ' + spec.list.join(', ') : 'faixa: ' + spec.min + ' a ' + spec.max + (spec.unit || '')));
+  }
+  L.push('Avalie espessura física de topo/base em conjunto com o número de camadas, principalmente ao afinar camadas. Considere detalhes pequenos, continuidade de perímetros, posição da costura, vazão calibrada e velocidades das faces visíveis. Não reduza fluxo/temperatura indiscriminadamente e não prometa corrigir umidade ou calibração apenas com o 3MF.');
+  L.push('Altura variável: quando a análise acima indicar superfícies inclinadas/curvas, você PODE propor a chave especial altura_variavel no JSON. Exemplo de formato (limites são ilustrativos, ajuste ao bico e ao perfil): {"chave":"altura_variavel","valor":{"modo":"automatico","objetos":[1],"altura_min":0.08,"altura_max":0.2},"motivo":"refinar curvaturas mantendo camadas maiores nas paredes verticais"}. O app calcula o perfil pela malha e o grava em Metadata/layer_heights_profile.txt; não use uma chave fictícia adaptive_layer_height.');
+  L.push('Se já houver um perfil variável salvo e a melhor escolha for voltar à altura fixa, use {"chave":"altura_variavel","valor":{"modo":"desativar","objetos":[1]}}. Mudar apenas layer_height não remove um perfil variável existente.');
+  L.push('Use somente índices de objetos cuja análise esteja disponível e indique benefício. Preserve a primeira camada. Não proponha altura variável em suportes orgânicos. Com vários objetos e torre de limpeza ativa, use sincronizar:true e inclua TODOS os índices, somente se todos os objetos analisados tiverem a mesma altura: o app gera um único perfil geométrico compartilhado. Se as alturas diferirem ou a geometria estiver indisponível, preserve a torre no multicolor e prefira altura fixa e engomar, sem desligar recursos necessários apenas para forçar altura variável. Ajustes próprios de camadas/suportes por objeto precisam ser revisados antes.');
+  L.push('');
   L.push('Se precisar, pesquise as recomendações do fabricante do filamento e as especificações da impressora antes de responder.');
   L.push('Responda SOMENTE com um bloco de código JSON neste formato:');
   L.push('{"resumo":"uma frase","alteracoes":[{"chave":"layer_height","valor":"0.16","motivo":"explicação curta"}]}');
-  L.push('Regras: use apenas as configurações atuais ou as configurações de engomar aceitas listadas acima; mantenha o mesmo formato de valor (ex.: "15%" para densidade); para números, envie um valor escalar como "40", sem colchetes nem unidade; numa chave por filamento, um valor único vale para todos os filamentos; liste só o que realmente deve mudar.');
+  L.push('Regras: use apenas as configurações atuais ou as configurações adicionais e altura_variavel aceitas listadas acima; mantenha o mesmo formato de valor (ex.: "15%" para densidade); para números, envie um valor escalar como "40", sem colchetes nem unidade; exceção: altura_variavel exige valor como objeto JSON estruturado, com objetos como lista de índices inteiros, conforme os exemplos; numa chave por filamento, um valor único vale para todos os filamentos; liste só o que realmente deve mudar.');
   return L.join('\n');
 }
 
@@ -339,16 +379,23 @@ function extractJson(text) {
 function evaluateChanges(p, data) {
   const list = Array.isArray(data) ? data : (data && (data.alteracoes || data.changes));
   if (!Array.isArray(list)) throw new Error('O JSON não tem a lista "alteracoes".');
-  return list.map(it => {
+  const results = list.map(it => {
     const key = String((it && (it.chave ?? it.key)) ?? '').trim();
     const spec = S[key];
     const r = { key, spec, reason: String((it && (it.motivo ?? it.reason)) ?? ''), before: p.cfg[key], after: null, status: 'bad', msg: '', conflicts: [] };
     if (!key) { r.msg = 'Item sem nome de chave.'; return r; }
     if (!spec) { r.msg = 'Chave fora da lista que o app altera com segurança.'; return r; }
-    if (!(key in p.cfg) && !ADDABLE_IRONING_KEYS.has(key)) { r.msg = 'Esta chave não existe neste projeto.'; return r; }
+    if (key === 'altura_variavel') return r;
+    if (!(key in p.cfg) && !ADDABLE_PROCESS_KEYS.has(key)) { r.msg = 'Esta chave não existe neste projeto.'; return r; }
     const raw = it.valor ?? it.value;
     if (raw === undefined || raw === null) { r.msg = 'Item sem valor.'; return r; }
-    try { r.after = coerce(spec, raw, p.cfg[key]); } catch (e) { r.msg = e.message; return r; }
+    try {
+      r.after = coerce(spec, raw, p.cfg[key]);
+      if (['layer_height', 'initial_layer_print_height'].includes(key)) {
+        const nozzle = Number(Array.isArray(p.cfg.nozzle_diameter) ? p.cfg.nozzle_diameter[0] : p.cfg.nozzle_diameter) || .4;
+        if (Number(r.after) > nozzle * .8) throw new Error('Altura de camada excede 80% do diâmetro do bico.');
+      }
+    } catch (e) { r.msg = e.message; return r; }
     const wasNum = x => typeof x === 'number';
     if (spec.type !== 'pct' && (Array.isArray(r.before) ? wasNum(r.before[0]) : wasNum(r.before))) {
       r.after = Array.isArray(r.after) ? r.after.map(Number) : Number(r.after);
@@ -357,6 +404,20 @@ function evaluateChanges(p, data) {
     if (r.status === 'change') r.conflicts = p.objects.filter(o => o.overrides.includes(key)).map(o => o.name);
     return r;
   });
+  const cfg = { ...p.cfg };
+  for (const item of results) if (item.status === 'change' && item.key !== 'altura_variavel') cfg[item.key] = item.after;
+  const variable = results.filter(item => item.key === 'altura_variavel');
+  for (const item of variable) {
+    try {
+      if (variable.length > 1) throw new Error('Use um único item altura_variavel com todos os índices desejados.');
+      if (p.profileError) throw new Error('Perfil variável existente não pôde ser interpretado; revise o arquivo no Bambu Studio.');
+      const raw = list[results.indexOf(item)].valor ?? list[results.indexOf(item)].value;
+      item.after = createAdaptiveProfiles(p, raw, cfg);
+      item.before = {count: item.after.objetos.filter(id => p.layerProfiles?.[id]).length};
+      item.status = item.after.objetos.every(id => sameVal(p.layerProfiles?.[id], item.after.perfis[id])) ? 'same' : 'change';
+    } catch (error) { item.msg = error.message; }
+  }
+  return results;
 }
 /* Chaves que ficam no perfil de filamento (s_Preset_filament_options do Bambu Studio). As demais que o app
    altera ficam no perfil de processo; nenhuma fica no perfil da impressora. */
@@ -387,19 +448,38 @@ function markDifferent(cfg, keys) {
 async function buildModified(p, accepted, opts) {
   const o = opts || {};
   const cfg = JSON.parse(JSON.stringify(p.cfg));
-  accepted.forEach(c => { cfg[c.key] = c.after; });
-  markDifferent(cfg, accepted.map(c => c.key));
+  const normal = accepted.filter(c => c.key !== 'altura_variavel');
+  const variable = accepted.filter(c => c.key === 'altura_variavel');
+  normal.forEach(c => { cfg[c.key] = c.after; });
+  markDifferent(cfg, normal.map(c => c.key));
   const rep = new Map();
   rep.set(CFG_PATH, JSON.stringify(cfg, null, 4));
+  if (variable.length) {
+    if (variable.length > 1 || p.profileError) throw new Error('Perfil de altura variável inválido.');
+    // Recheck against only the changes actually selected in the UI.
+    const generated = createAdaptiveProfiles(p, variable[0].after, cfg);
+    const profiles = { ...p.layerProfiles, ...generated.perfis };
+    for (const id of generated.remover || []) delete profiles[id];
+    rep.set(PROFILE_PATH, Object.keys(profiles).length ? serializeProfiles(profiles) : null);
+    const types = findEntry(p.zip, '[Content_Types].xml');
+    if (types) {
+      const text = dec.decode(await readEntry(p.zip, types));
+      if (!/Extension=["']txt["']/i.test(text)) rep.set('[Content_Types].xml', text.replace(/<\/Types>/, '<Default Extension="txt" ContentType="text/plain"/></Types>'));
+    }
+  }
+
   if (o.removeOverrides && p.modelXml) {
     const keys = new Set(accepted.map(c => c.key));
     rep.set(MS_PATH, stripOverrides(p.modelXml, keys));
   }
   const items = [];
   for (const e of p.zip.entries) {
-    if (rep.has(e.name)) items.push(await newItem(e.nameBytes, rep.get(e.name), e));
+    if (rep.has(e.name)) {
+      if (rep.get(e.name) !== null) items.push(await newItem(e.nameBytes, rep.get(e.name), e));
+    }
     else items.push({ nameBytes: e.nameBytes, flags: e.flags & 0x0800, method: e.method, time: e.time, date: e.date, crc: e.crc, csize: e.csize, usize: e.usize, data: rawData(p.zip, e) });
   }
+  for (const [path, content] of rep) if (content !== null && !findEntry(p.zip, path)) items.push(await newItem(enc.encode(path), content, null));
   return new Blob(writeZip(items), { type: 'model/3mf' });
 }
 function changesText(p, f, fileName, accepted) {

@@ -15,7 +15,10 @@ export type Project = {
   cfg: Record<string, unknown>
   modelXml: string
   app: string
-  objects: { name: string; overrides: string[] }[]
+  geometry: { index?: number; id?: string; name: string; available: boolean; height?: number; width?: number; depth?: number; curved?: boolean; error?: string; bins?: number[] }[]
+  layerProfiles: Record<number, number[]>
+  profileError: string
+  objects: { id?: string; name: string; overrides: string[]; excludedParts?: string[] }[]
   plates: number
   sliced: boolean
 }

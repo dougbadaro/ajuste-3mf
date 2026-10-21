@@ -16,7 +16,7 @@ const QA: [string, string][] = [
   ],
   [
     "O que o app consegue alterar?",
-    "Cerca de 55 configurações do Bambu Studio: qualidade e camadas, paredes e preenchimento, suportes e brim, velocidades e temperaturas, ventoinha e torre de limpeza do multicolor. Valores fora de limites seguros e chaves desconhecidas são ignorados e aparecem na lista.",
+    "Configurações do Bambu Studio: qualidade e camadas, engomar, espessura de topo e base, paredes e preenchimento, suportes e brim, velocidades e temperaturas, ventoinha e torre de limpeza do multicolor. Também gera ou remove perfis de altura variável pela geometria, verificando a compatibilidade com suportes e multicolor. Valores fora de limites seguros e chaves desconhecidas são ignorados e aparecem na lista.",
   ],
   [
     "Por que fatiar de novo no Bambu Studio?",

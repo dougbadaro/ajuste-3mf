@@ -353,6 +353,10 @@ export default function App() {
       ["Placas", String(project.plates || 1)],
     ]
     if (project.app) rows.push(["Salvo por", project.app])
+    const adaptive = project.geometry.filter((object) => object.available && object.curved).length
+    rows.push(["Altura variável", adaptive ? `Análise disponível para ${adaptive} objeto(s) com faces inclinadas` : "Sem benefício identificado ou geometria não disponível para análise automática"])
+    const savedProfiles = Object.keys(project.layerProfiles).length
+    if (savedProfiles) rows.push(["Perfis salvos", `${savedProfiles} objeto(s) com altura variável`])
     return rows
   }, [project])
 

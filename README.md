@@ -69,3 +69,24 @@ Ajuste 3MF usa uma logo vetorial própria, com três camadas de fatiamento em tr
 A marca usa um ícone de três camadas em traço fino, sem moldura, remetendo a um fatiador 3D. O resumo para a IA solicita avaliar engomar/passar ferro nas faces superiores planas, respeitando filamento, geometria e tempo adicional. O JSON pode criar `ironing_type`, `ironing_speed`, `ironing_flow`, `ironing_spacing` e `ironing_inset` mesmo quando herdados do perfil e ausentes do arquivo. O aplicativo valida os valores e grava as novas chaves no perfil de processo, incluindo `different_settings_to_system`. O app continua exigindo confirmação das mudanças antes de baixar o 3MF.
 
 As opções de passar ferro seguem os nomes de configuração do [Bambu Studio](https://github.com/bambulab/BambuStudio/blob/master/src/libslic3r/PrintConfig.cpp). Quando uma opção está ausente, a comparação mostra “Herdado do perfil”, sem inventar um valor anterior. As demais chaves ausentes continuam sendo rejeitadas.
+
+
+## Altura variável por geometria
+
+O aplicativo lê malhas 3MF em milímetros, incluindo componentes em arquivos internos e a transformação de impressão. O resumo informa dimensões e os índices nativos dos objetos para os quais foram identificadas faces inclinadas. A análise é geométrica e aproximada; não é o algoritmo interno do Bambu Studio e não garante acabamento sem conferir o fatiamento.
+
+Exemplo da estrutura JSON (os valores são ilustrativos, não uma recomendação para toda peça):
+
+```json
+{"alteracoes":[{"chave":"altura_variavel","valor":{"modo":"automatico","objetos":[2],"altura_min":0.08,"altura_max":0.2},"motivo":"Refinar superfícies inclinadas"}]}
+```
+
+O app calcula um perfil suave com a primeira camada preservada e grava o arquivo nativo `Metadata/layer_heights_profile.txt`. Os índices seguem a ordem de construção do 3MF, que pode diferir da ordem dos nomes no arquivo. Perfis de outros objetos são preservados. Para voltar à altura fixa, use a mesma chave com `{"modo":"desativar","objetos":[2]}`.
+
+Limites: a análise automática recusa arquivos sem geometria identificável, referências ambíguas, unidades diferentes de milímetros, malhas excessivamente grandes, cópias com orientações/escalas diferentes, objetos com ajustes próprios de camadas/suportes, suportes orgânicos e combinações de torre de limpeza com perfis diferentes. Com `sincronizar:true`, todos os objetos de mesma altura e geometria disponível recebem um perfil compartilhado, mantendo a torre ativa. Alturas diferentes ainda exigem camada fixa ou revisão no Bambu Studio. Não desative a limpeza necessária de uma impressão multicor para contornar essa limitação. A confirmação e o download revalidam os conflitos.
+
+Também é possível criar espessuras mínimas de topo/base, Arachne, padrão do topo e posição da costura quando herdados do perfil. A camada global é validada em relação ao bico. Confira o resultado e fatie novamente no Bambu Studio.
+
+Referências do formato e compatibilidade: [3MF do Bambu Studio](https://github.com/bambulab/BambuStudio/blob/master/src/libslic3r/Format/bbs_3mf.cpp), [validação da impressão](https://github.com/bambulab/BambuStudio/blob/master/src/libslic3r/Print.cpp).
+
+Para manter a torre de limpeza ao usar altura variável em vários objetos de mesma altura, acrescente `"sincronizar":true` ao valor e liste todos os índices. O perfil compartilhado considera as inclinações de todas as malhas.

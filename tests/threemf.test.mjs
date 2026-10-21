@@ -158,7 +158,7 @@ test("criar engomar não libera valores inválidos nem outras chaves ausentes", 
     { chave: "ironing_spacing", valor: "0" },
     { chave: "ironing_inset", valor: "-1" },
     { chave: "ironing_fake", valor: "1" },
-    { chave: "wall_generator", valor: "arachne" },
+    { chave: "support_style", valor: "snug" },
   ] })
   assert.ok(changes.every(c => c.status === "bad"))
   assert.equal("ironing_type" in p.cfg, false)
