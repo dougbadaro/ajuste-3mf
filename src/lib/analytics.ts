@@ -22,7 +22,7 @@ function addScript(src: string) {
   document.head.appendChild(s)
 }
 
-const KEY = "nossoprojeto3d-medicao"
+const KEY = "ajuste3mf-medicao"
 export type Consent = "granted" | "denied" | null
 
 /** Só há o que perguntar se existe algum ID configurado e o navegador não pediu "Não rastrear". */

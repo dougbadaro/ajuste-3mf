@@ -51,7 +51,7 @@ import {
 // A cena 3D é pesada (Three.js): carrega à parte, depois do resto da página.
 const PrintScene = lazy(() => import("@/components/print-scene"))
 
-// Logo original recolorido por filtro SVG para acompanhar o roxo da interface.
+// Identidade vetorial própria: camadas de impressão e ajuste em roxo.
 const LOGO = import.meta.env.BASE_URL + "brand.svg"
 
 const OPT = {
@@ -558,7 +558,7 @@ export default function App() {
               <a href="#hero-title" className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                 <img src={LOGO} alt="" width={32} height={32} className="size-8 object-contain" />
                 <span className="truncate text-[15px] font-semibold tracking-tight">
-                  Nosso Projeto 3D <span className="font-normal text-muted-foreground">/ Ajuste 3MF</span>
+                  Ajuste <span className="text-primary-ink">3MF</span>
                 </span>
               </a>
               <nav aria-label="Atalhos" className="flex items-center gap-1">

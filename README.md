@@ -1,6 +1,6 @@
 # Ajuste 3MF — versão com créditos ao projeto original
 
-Projeto local em `C:\www\ajuste-3mf`, baseado no código público de [Nosso Projeto 3D](https://github.com/nossoprojeto3d/ajuste-3mf), revisão `8d034d9`. O histórico e os créditos originais foram preservados. A estrutura e o fluxo do site de referência foram preservados; esta versão personaliza a paleta para roxo e troca o vaso pelo 3DBenchy.
+Projeto local em `C:\www\ajuste-3mf`, baseado no código público de [projeto de referência](https://github.com/nossoprojeto3d/ajuste-3mf), revisão `8d034d9`. O histórico e os créditos originais foram preservados. A estrutura e o fluxo do site de referência foram preservados; esta versão personaliza a paleta para roxo e troca o vaso pelo 3DBenchy.
 
 Site: https://dougbadaro.github.io/ajuste-3mf/
 
@@ -49,7 +49,7 @@ Os seis testes existentes verificam leitura, validação, gravação e reabertur
 
 ## Privacidade e origem
 
-Esta versão é publicada em repositório público e no GitHub Pages por solicitação do proprietário. O projeto original é o [Ajuste 3MF, de Nosso Projeto 3D](https://github.com/nossoprojeto3d/ajuste-3mf), também disponível em [seu site original](https://nossoprojeto3d.github.io/ajuste-3mf/). O rodapé reconhece a autoria original e contém links para ambas as versões. Os créditos e o histórico originais foram preservados. Esta cópia não acrescenta uma licença ao código de origem.
+Esta versão é publicada em repositório público e no GitHub Pages por solicitação do proprietário. O projeto original é o [Ajuste 3MF, de projeto de referência](https://github.com/nossoprojeto3d/ajuste-3mf), também disponível em [seu site original](https://nossoprojeto3d.github.io/ajuste-3mf/). O rodapé reconhece a autoria original e contém links para ambas as versões. Os créditos e o histórico originais foram preservados. Esta cópia não acrescenta uma licença ao código de origem.
 
 Segredos futuros devem ficar em `.env.local`, ignorado pelo Git. O arquivo `.env` versionado contém apenas configurações públicas vazias.
 
@@ -59,3 +59,7 @@ Segredos futuros devem ficar em `.env.local`, ignorado pelo Git. O arquivo `.env
 O destaque da interface é `#A75EFF`. Os atalhos do Instagram foram removidos do cabeçalho e do rodapé. A animação usa 152 cortes horizontais do [STL oficial do 3DBenchy](https://github.com/CreativeTools/3DBenchy/blob/master/Single-part/3DBenchy.stl), com casco, cabine, janelas e chaminé. O modelo é de Daniel Norée / Creative Tools, atualmente disponibilizado sob [CC0](https://www.3dbenchy.com/license/). Os contornos ficam em `public/models/benchy-layers.json` e são carregados depois da interface. A impressão pausa fora da tela e respeita a preferência por movimento reduzido.
 
 Para regenerar os contornos, instale `numpy` em um ambiente Python e execute `python tools/generate-benchy-layers.py caminho/3DBenchy.stl` com o STL oficial.
+
+## Identidade própria
+
+Ajuste 3MF usa uma logo vetorial própria, com camadas de impressão e um ponto de ajuste. O rodapé mantém um link discreto para a origem, sem usar o nome ou os logos anteriores como identidade do site. Os contornos do barquinho omitem a inscrição na base do STL original.

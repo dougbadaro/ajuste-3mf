@@ -70,19 +70,14 @@ export function Footer({ logo }: { logo: string }) {
         <div className="flex items-center gap-2.5">
           <img src={logo} alt="" width={28} height={28} loading="lazy" className="size-7 object-contain" />
           <span>
-            <span className="font-medium text-foreground">Nosso Projeto 3D</span> · Ajuste 3MF
+            <span className="font-medium text-foreground">Ajuste <span className="text-primary-ink">3MF</span></span>
           </span>
         </div>
       </div>
       <div className="mx-auto max-w-6xl px-4 pb-8 text-xs leading-relaxed text-muted-foreground sm:px-6">
         <p>
-          Esta versão é baseada no{' '}
-          <a href="https://nossoprojeto3d.github.io/ajuste-3mf/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">
-            Ajuste 3MF
-          </a>, criado por{' '}
-          <a href="https://github.com/nossoprojeto3d" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">
-            Nosso Projeto 3D
-          </a>. Créditos pela interface e pelas funcionalidades do projeto original.
+          Baseado no{' '}
+          <a href="https://github.com/nossoprojeto3d/ajuste-3mf" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">projeto original</a>, com adaptações nesta versão.
           {' '}O barquinho 3DBenchy é de{' '}
           <a href="https://www.3dbenchy.com/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">Daniel Norée / Creative Tools</a> (CC0).
         </p>

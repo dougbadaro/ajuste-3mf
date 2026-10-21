@@ -62,6 +62,13 @@ for h in np.linspace(.137,47.97,152):
             edge=options[0]
         path=simplify(np.asarray(path))
         if len(path)>1 and np.linalg.norm(np.diff(path,axis=0),axis=1).sum()>.12:paths.append(path)
+    # The official STL has recessed lettering on its underside (z < 0.5 mm).
+    # Keep only the hull's outer contour in that band, filling the inscription
+    # visually while preserving the hull, deck, windows and other features.
+    if h < .5 and paths:
+        def enclosed_area(path):
+            return abs(float(np.sum(path[:-1,0]*path[1:,1]-path[1:,0]*path[:-1,1])))
+        paths=[max(paths,key=enclosed_area)]
     start=len(positions)//3
     for path in sorted(paths,key=lambda p:-len(p)):
         for a,b in zip(path[:-1],path[1:]):

@@ -7,7 +7,7 @@ Esta versão é publicada em https://dougbadaro.github.io/ajuste-3mf/. Baseada n
 
 React 19, Vite 6, TypeScript, Tailwind v4 e shadcn/ui (new-york v4). É o único projeto com build. Animações com Motion (`motion/react`), cena 3D do 3DBenchy com Three.js (carregada à parte) e ícones do Phosphor.
 
-Visual "oficina técnica", diferente do catálogo de propósito: sempre escuro, grafite quase preto, um único acento roxo-filamento (`#A75EFF`) (`--primary`), Geist no texto e Geist Mono nos dados (fontes do `@fontsource-variable`, sem Google Fonts). O logo é o da marca, em versão roxa só neste app.
+Visual "oficina técnica", diferente do catálogo de propósito: sempre escuro, grafite quase preto, um único acento roxo-filamento (`#A75EFF`) (`--primary`), Geist no texto e Geist Mono nos dados (fontes do `@fontsource-variable`, sem Google Fonts). A logo é própria do Ajuste 3MF, em roxo.
 
 ```bash
 npm run dev        # http://localhost:5173
@@ -43,7 +43,7 @@ Todo push na `main` dispara o `.github/workflows/deploy.yml`, que roda os testes
 
 ## Imagens
 
-O logo, o favicon e o ícone do iPhone ficam em `public/`, numa versão em cor única no roxo da página (`#ff6b2c`), gerada a partir do logo dourado do catálogo. Se o logo mudar, gere de novo: mesma forma, pintada com o laranja. A prévia do link no WhatsApp e nas redes é `public/og.jpg` (1200×630, captura do topo da página com o vaso no meio da impressão). Se o topo mudar, gere de novo. O app não usa fotos: o visual do topo é a cena 3D. Imagens próprias vão em `public/`.
+A identidade própria usa `public/brand.svg` (ícone de camadas e ajuste) e `public/logo-ajuste-3mf.svg` (assinatura com nome), ambos em `#A75EFF`. Não reutilize logos da origem. A prévia social é `public/og.jpg`; atualize-a quando o topo mudar. A cena usa os contornos do 3DBenchy em `public/models/benchy-layers.json`, sem a inscrição na base. Preserve os links discretos de atribuição no rodapé.
 
 ## Roteiro de teste
 
