@@ -1,6 +1,8 @@
-# Ajuste 3MF — réplica privada
+# Ajuste 3MF — versão com créditos ao projeto original
 
 Projeto local em `C:\www\ajuste-3mf`, baseado no código público de [Nosso Projeto 3D](https://github.com/nossoprojeto3d/ajuste-3mf), revisão `8d034d9`. O histórico e os créditos originais foram preservados. O visual, os textos, os recursos e a animação do site de referência foram mantidos.
+
+Site: https://dougbadaro.github.io/ajuste-3mf/
 
 ## Executar
 
@@ -35,8 +37,8 @@ Valores numéricos no JSON devem ser escalares, por exemplo `"50"`, sem colchete
 ## Ajustes desta cópia
 
 - IDs de Analytics e Meta Pixel vazios em `.env`; nenhum evento é enviado ao proprietário do site original.
-- O workflow apenas testa, verifica tipos e compila. Não publica no GitHub Pages.
-- Código de aplicação e recursos visuais preservados.
+- O workflow testa, verifica tipos, compila e publica no GitHub Pages a cada push na `main`. Pull requests apenas validam o projeto.
+- Recursos visuais preservados e créditos explícitos no rodapé, com links para o site e o código-fonte originais.
 - Mapa Graphify incluído em `graphify-out/`: `graph.html`, `graph.json`, `GRAPH_REPORT.md` e `HEALTH.txt`.
 
 O Graphify analisou os 33 arquivos de `src`, gerando 235 nós, 564 relações e 15 comunidades sem API paga. O diagnóstico apontou quatro relações com destino ausente, uma autorrelação e sete pares de relações colapsados no grafo não dirigido. São limites do mapa estrutural; consulte `HEALTH.txt`.
@@ -47,6 +49,6 @@ Os seis testes existentes verificam leitura, validação, gravação e reabertur
 
 ## Privacidade e origem
 
-Esta cópia foi preparada para um repositório privado. Os links da marca continuam apontando para o autor original para preservar a referência solicitada. Não há licença de redistribuição declarada na origem; esta cópia não acrescenta uma licença nem altera os créditos originais.
+Esta versão é publicada em repositório público e no GitHub Pages por solicitação do proprietário. O projeto original é o [Ajuste 3MF, de Nosso Projeto 3D](https://github.com/nossoprojeto3d/ajuste-3mf), também disponível em [seu site original](https://nossoprojeto3d.github.io/ajuste-3mf/). O rodapé reconhece a autoria original e contém links para ambas as versões. Os créditos e o histórico originais foram preservados. Esta cópia não acrescenta uma licença ao código de origem.
 
 Segredos futuros devem ficar em `.env.local`, ignorado pelo Git. O arquivo `.env` versionado contém apenas configurações públicas vazias.

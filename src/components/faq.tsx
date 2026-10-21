@@ -85,6 +85,21 @@ export function Footer({ logo, instagram }: { logo: string; instagram: string })
           @nossoprojeto3d
         </a>
       </div>
+      <div className="mx-auto max-w-6xl px-4 pb-8 text-xs leading-relaxed text-muted-foreground sm:px-6">
+        <p>
+          Esta versão é baseada no{' '}
+          <a href="https://nossoprojeto3d.github.io/ajuste-3mf/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">
+            Ajuste 3MF
+          </a>, criado por{' '}
+          <a href="https://github.com/nossoprojeto3d" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">
+            Nosso Projeto 3D
+          </a>. Créditos pela interface e pelas funcionalidades do projeto original.
+        </p>
+        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+          <a href="https://github.com/nossoprojeto3d/ajuste-3mf" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">Código-fonte original</a>
+          <a href="https://github.com/dougbadaro/ajuste-3mf" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">Código desta versão</a>
+        </p>
+      </div>
     </footer>
   )
 }
