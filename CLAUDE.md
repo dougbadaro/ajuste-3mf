@@ -5,9 +5,9 @@ Esta versão é publicada em https://dougbadaro.github.io/ajuste-3mf/. Baseada n
 
 ## Stack
 
-React 19, Vite 6, TypeScript, Tailwind v4 e shadcn/ui (new-york v4). É o único projeto com build. Animações com Motion (`motion/react`), cena 3D com Three.js (carregada à parte) e ícones do Phosphor.
+React 19, Vite 6, TypeScript, Tailwind v4 e shadcn/ui (new-york v4). É o único projeto com build. Animações com Motion (`motion/react`), cena 3D do 3DBenchy com Three.js (carregada à parte) e ícones do Phosphor.
 
-Visual "oficina técnica", diferente do catálogo de propósito: sempre escuro, grafite quase preto, um único acento laranja-filamento (`--primary`), Geist no texto e Geist Mono nos dados (fontes do `@fontsource-variable`, sem Google Fonts). O logo é o da marca, em versão laranja só neste app.
+Visual "oficina técnica", diferente do catálogo de propósito: sempre escuro, grafite quase preto, um único acento roxo-filamento (`#A75EFF`) (`--primary`), Geist no texto e Geist Mono nos dados (fontes do `@fontsource-variable`, sem Google Fonts). O logo é o da marca, em versão roxa só neste app.
 
 ```bash
 npm run dev        # http://localhost:5173
@@ -25,7 +25,7 @@ Todo push na `main` dispara o `.github/workflows/deploy.yml`, que roda os testes
 ## Arquivos
 
 - `src/App.tsx`: a tela. Hero com a cena 3D, depois a ferramenta com uma etapa em foco por vez (Arquivo, Claude, Aplicar) e a barra de etapas clicável no topo. O mesmo layout serve celular e desktop.
-- `src/components/print-scene.tsx`: vaso sendo impresso camada por camada (Three.js). Pausa fora da tela e fica parado com movimento reduzido.
+- `src/components/print-scene.tsx`: barquinho 3DBenchy sendo impresso camada por camada (Three.js). Pausa fora da tela e fica parado com movimento reduzido.
 - `src/components/faq.tsx`: dúvidas e rodapé.
 - `src/lib/threemf.js`: leitura, validação e gravação do 3MF, **sem dependências** (ZIP próprio). Toda mudança aqui precisa de teste em `tests/threemf.test.mjs`.
 - `src/lib/analytics.ts` + `src/components/consent-banner.tsx`: medição com consentimento.
@@ -43,7 +43,7 @@ Todo push na `main` dispara o `.github/workflows/deploy.yml`, que roda os testes
 
 ## Imagens
 
-O logo, o favicon e o ícone do iPhone ficam em `public/`, numa versão em cor única no laranja da página (`#ff6b2c`), gerada a partir do logo dourado do catálogo. Se o logo mudar, gere de novo: mesma forma, pintada com o laranja. A prévia do link no WhatsApp e nas redes é `public/og.jpg` (1200×630, captura do topo da página com o vaso no meio da impressão). Se o topo mudar, gere de novo. O app não usa fotos: o visual do topo é a cena 3D. Imagens próprias vão em `public/`.
+O logo, o favicon e o ícone do iPhone ficam em `public/`, numa versão em cor única no roxo da página (`#ff6b2c`), gerada a partir do logo dourado do catálogo. Se o logo mudar, gere de novo: mesma forma, pintada com o laranja. A prévia do link no WhatsApp e nas redes é `public/og.jpg` (1200×630, captura do topo da página com o vaso no meio da impressão). Se o topo mudar, gere de novo. O app não usa fotos: o visual do topo é a cena 3D. Imagens próprias vão em `public/`.
 
 ## Roteiro de teste
 

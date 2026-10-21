@@ -1,7 +1,6 @@
 import { m } from "motion/react"
-import { InstagramLogo, ShieldCheck } from "@phosphor-icons/react"
+import { ShieldCheck } from "@phosphor-icons/react"
 
-import { track } from "@/lib/analytics"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -64,7 +63,7 @@ export function Faq() {
   )
 }
 
-export function Footer({ logo, instagram }: { logo: string; instagram: string }) {
+export function Footer({ logo }: { logo: string }) {
   return (
     <footer className="border-t border-hairline">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -74,16 +73,6 @@ export function Footer({ logo, instagram }: { logo: string; instagram: string })
             <span className="font-medium text-foreground">Nosso Projeto 3D</span> · Ajuste 3MF
           </span>
         </div>
-        <a
-          href={instagram}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => track("instagram_clique")}
-          className="flex w-fit items-center gap-2 rounded-md transition-colors outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
-        >
-          <InstagramLogo className="size-5" />
-          @nossoprojeto3d
-        </a>
       </div>
       <div className="mx-auto max-w-6xl px-4 pb-8 text-xs leading-relaxed text-muted-foreground sm:px-6">
         <p>
@@ -94,6 +83,8 @@ export function Footer({ logo, instagram }: { logo: string; instagram: string })
           <a href="https://github.com/nossoprojeto3d" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">
             Nosso Projeto 3D
           </a>. Créditos pela interface e pelas funcionalidades do projeto original.
+          {' '}O barquinho 3DBenchy é de{' '}
+          <a href="https://www.3dbenchy.com/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">Daniel Norée / Creative Tools</a> (CC0).
         </p>
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
           <a href="https://github.com/nossoprojeto3d/ajuste-3mf" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 transition-colors hover:text-foreground">Código-fonte original</a>
